@@ -140,6 +140,9 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--bl)}
+.ws-tex-opt{width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--dim);transition:all .12s;padding:4px;background:var(--s2)}
+.ws-tex-opt:hover{border-color:var(--bl);color:var(--text)}
+.ws-tex-opt.active{border-color:var(--acc);color:var(--acc);background:rgba(124,138,240,.06)}
 ::-webkit-scrollbar-corner{background:var(--bg)}
 
 /* ═══ LP TOKENS BAR (fixed at bottom of viewport) ═══ */
@@ -232,6 +235,28 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
 <div style="display:flex;align-items:center;justify-content:space-between"><label style="font-size:9px;margin:0">Grid Dots</label><input type="checkbox" id="set-grid" checked onchange="toggleGrid(this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"></div>
 <div style="display:flex;align-items:center;justify-content:space-between"><label style="font-size:9px;margin:0">Snap to Grid</label><input type="checkbox" id="set-snap" onchange="if(this.checked!==snapGrid)toggleSnap()" style="width:14px;height:14px;accent-color:var(--acc)"></div>
 <div style="display:flex;align-items:center;justify-content:space-between"><label style="font-size:9px;margin:0">Canvas Width</label><select onchange="setCanvasWidth(this.value)" style="width:90px;font-size:9px;padding:3px 6px"><option value="1280" selected>1280px</option><option value="1440">1440px</option><option value="1920">1920px</option><option value="960">960px</option><option value="768">768px</option><option value="390">390px</option></select></div>
+</div>
+</div>
+<!-- Workspace -->
+<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">
+<div style="font-family:var(--mono);font-size:7px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">Workspace</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;justify-content:space-between"><label style="font-size:9px;margin:0">Background</label><input type="color" id="ws-bg-color" value="#0a0a0e" oninput="setWsBg()" style="width:28px;height:20px;border-radius:3px;padding:1px;border:1px solid var(--border);cursor:pointer"></div>
+<div><label style="font-size:9px;margin:0 0 6px">Texture</label>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:4px">
+<div class="ws-tex-opt active" data-tex="dots" onclick="setWsTex('dots',this)" title="Dots"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><circle cx="6" cy="6" r="1" fill="currentColor" opacity=".4"/><circle cx="18" cy="6" r="1" fill="currentColor" opacity=".4"/><circle cx="6" cy="18" r="1" fill="currentColor" opacity=".4"/><circle cx="18" cy="18" r="1" fill="currentColor" opacity=".4"/><circle cx="12" cy="12" r="1" fill="currentColor" opacity=".4"/></svg></div>
+<div class="ws-tex-opt" data-tex="grid" onclick="setWsTex('grid',this)" title="Grid"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><path d="M0 8h24M0 16h24M8 0v24M16 0v24" stroke="currentColor" stroke-width=".5" opacity=".3" fill="none"/></svg></div>
+<div class="ws-tex-opt" data-tex="cross" onclick="setWsTex('cross',this)" title="Cross"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><path d="M10 12h4M12 10v4" stroke="currentColor" stroke-width=".7" opacity=".35" fill="none"/></svg></div>
+<div class="ws-tex-opt" data-tex="lines" onclick="setWsTex('lines',this)" title="Lines"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><path d="M0 6h24M0 12h24M0 18h24" stroke="currentColor" stroke-width=".5" opacity=".25" fill="none"/></svg></div>
+<div class="ws-tex-opt" data-tex="diag" onclick="setWsTex('diag',this)" title="Diagonal"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><path d="M0 24L24 0M-6 18L18-6M6 30L30 6" stroke="currentColor" stroke-width=".4" opacity=".2" fill="none"/></svg></div>
+<div class="ws-tex-opt" data-tex="iso" onclick="setWsTex('iso',this)" title="Isometric"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><path d="M0 12l12-7 12 7M0 12l12 7 12-7" stroke="currentColor" stroke-width=".5" opacity=".25" fill="none"/></svg></div>
+<div class="ws-tex-opt" data-tex="noise" onclick="setWsTex('noise',this)" title="Noise"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><circle cx="3" cy="5" r=".6" fill="currentColor" opacity=".2"/><circle cx="15" cy="7" r=".5" fill="currentColor" opacity=".25"/><circle cx="6" cy="11" r=".5" fill="currentColor" opacity=".2"/><circle cx="18" cy="11" r=".6" fill="currentColor" opacity=".22"/><circle cx="10" cy="21" r=".5" fill="currentColor" opacity=".2"/></svg></div>
+<div class="ws-tex-opt" data-tex="none" onclick="setWsTex('none',this)" title="None"><svg viewBox="0 0 24 24" style="width:100%;height:100%"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width=".7" opacity=".25" fill="none"/></svg></div>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between"><label style="font-size:9px;margin:0">Size</label><input type="range" id="ws-tex-size" min="10" max="60" value="20" oninput="setWsBg()" style="width:100px;margin:0"></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><label style="font-size:9px;margin:0">Opacity</label><input type="range" id="ws-tex-op" min="1" max="15" value="2" oninput="setWsBg()" style="width:100px;margin:0"></div>
+<div style="display:flex;gap:3px;flex-wrap:wrap" id="ws-presets"></div>
 </div>
 </div>
 </div>
@@ -4134,7 +4159,7 @@ function filterThemes(cat,btn){
     b.style.color=active?'var(--acc)':'var(--dim)';
     b.style.borderColor=active?'var(--acc)':'var(--border)';
   });
-  renderThemes();
+  renderThemes();renderWsPresets();
 }
 function renderThemes(){
   const list=document.getElementById('theme-list');if(!list)return;
@@ -4157,7 +4182,7 @@ function toggleSettings(){
   const o=document.getElementById('settings-overlay');
   const open=p.style.right==='0px';
   if(open){p.style.right='-280px';o.style.display='none'}
-  else{p.style.right='0px';o.style.display='block';renderThemes()}
+  else{p.style.right='0px';o.style.display='block';renderThemes();renderWsPresets()}
 }
 function toggleGrid(on){
   const ws=document.getElementById('wsI');
@@ -4171,6 +4196,53 @@ function setCanvasWidth(w){
 }
 // Close settings on Escape
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const p=document.getElementById('settings-panel');if(p.style.right==='0px')toggleSettings()}});
+
+// ═══ WORKSPACE BACKGROUND ═══
+let _wsTex='dots';
+const WS_PRESETS=[
+  {name:'Default',bg:'#0a0a0e',tex:'dots'},
+  {name:'Blueprint',bg:'#0a1628',tex:'grid'},
+  {name:'Paper',bg:'#f5f0e8',tex:'dots'},
+  {name:'Dark Grid',bg:'#0c0c0c',tex:'grid'},
+  {name:'Void',bg:'#000000',tex:'none'},
+  {name:'Slate',bg:'#1a1d24',tex:'cross'},
+  {name:'Forest',bg:'#0a120c',tex:'dots'},
+  {name:'Warm',bg:'#16100c',tex:'dots'}
+];
+function setWsTex(tex,btn){
+  _wsTex=tex;
+  document.querySelectorAll('.ws-tex-opt').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  setWsBg();
+}
+function setWsBg(){
+  const ws=document.getElementById('wsI');if(!ws)return;
+  const color=document.getElementById('ws-bg-color')?.value||'#0a0a0e';
+  const size=parseInt(document.getElementById('ws-tex-size')?.value||20);
+  const op=(parseInt(document.getElementById('ws-tex-op')?.value||2)/100).toFixed(2);
+  const c=`rgba(255,255,255,${op})`;
+  ws.parentElement.style.backgroundColor=color;
+  let img='none',bSize='auto';
+  if(_wsTex==='dots'){img=`radial-gradient(circle,${c} 1px,transparent 1px)`;bSize=`${size}px ${size}px`}
+  else if(_wsTex==='grid'){img=`linear-gradient(${c} 1px,transparent 1px),linear-gradient(90deg,${c} 1px,transparent 1px)`;bSize=`${size}px ${size}px`}
+  else if(_wsTex==='cross'){img=`linear-gradient(${c} 1px,transparent 1px),linear-gradient(90deg,${c} 1px,transparent 1px)`;bSize=`${size}px ${size}px`}
+  else if(_wsTex==='lines'){img=`linear-gradient(${c} 1px,transparent 1px)`;bSize=`${size}px ${size}px`}
+  else if(_wsTex==='diag'){img=`repeating-linear-gradient(45deg,transparent,transparent ${size-1}px,${c} ${size-1}px,${c} ${size}px)`;bSize='auto'}
+  else if(_wsTex==='iso'){const s=size*2;img=`linear-gradient(30deg,${c} 12%,transparent 12.5%,transparent 87%,${c} 87.5%),linear-gradient(150deg,${c} 12%,transparent 12.5%,transparent 87%,${c} 87.5%)`;bSize=`${s}px ${Math.round(s*.577)}px`}
+  else if(_wsTex==='noise'){img=`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='${op}'/%3E%3C/svg%3E")`;bSize='200px 200px'}
+  ws.style.backgroundImage=img;ws.style.backgroundSize=bSize;
+}
+function applyWsPreset(i){
+  const p=WS_PRESETS[i];if(!p)return;
+  document.getElementById('ws-bg-color').value=p.bg;
+  _wsTex=p.tex;
+  document.querySelectorAll('.ws-tex-opt').forEach(b=>b.classList.toggle('active',b.dataset.tex===p.tex));
+  setWsBg();
+}
+function renderWsPresets(){
+  const c=document.getElementById('ws-presets');if(!c)return;
+  c.innerHTML=WS_PRESETS.map((p,i)=>`<button onclick="applyWsPreset(${i})" style="font-family:var(--mono);font-size:7px;padding:2px 6px;border:1px solid var(--border);border-radius:3px;background:${p.bg};color:${p.bg.startsWith('#f')||p.bg.startsWith('#e')?'#444':'#888'};cursor:pointer;transition:all .12s">${p.name}</button>`).join('');
+}
 
 document.addEventListener('DOMContentLoaded',()=>{
   openPreview();
