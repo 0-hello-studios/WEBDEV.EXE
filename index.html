@@ -176,7 +176,8 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
 /* Page canvas */
 .dk-page{position:relative!important;overflow:visible!important}
 /* Cursor states */
-.dk-page.mode-draw{cursor:crosshair!important}
+.dk-page.mode-draw{cursor:crosshair!important;touch-action:none}
+.dk-page.mode-text{touch-action:none}
 .dk-page.mode-text{cursor:text!important}
 .dk-page.mode-select{cursor:default!important}
 
@@ -2894,6 +2895,15 @@ function setMode(mode){
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const page=document.querySelector('.dk-page');
   if(page){page.classList.remove('mode-select','mode-draw','mode-text');page.classList.add('mode-'+mode)}
+  // Lock workspace scroll in draw/text mode on touch devices
+  const ws=document.querySelector('.workspace');
+  if(ws){
+    if(mode==='draw'||mode==='text'){
+      ws.style.overflow='hidden';ws.style.touchAction='none';
+    }else{
+      ws.style.overflow='';ws.style.touchAction='';
+    }
+  }
 }
 function toggleSnap(){
   snapGrid=!snapGrid;
@@ -3280,6 +3290,8 @@ function initDrawing(page,bd){
     drawRect.style.width='0px';drawRect.style.height='0px';
     page.appendChild(drawRect);
     _drawing={startX:x,startY:y,rect:drawRect,scale,page};
+    // Lock parent scroll during draw
+    if(bd){bd.style.overflow='hidden';bd.style.touchAction='none'}
     // Capture pointer on wbody so draw continues outside
     if(bd)bd.setPointerCapture(e.pointerId);
     _drawing.pointerId=e.pointerId;
@@ -3420,6 +3432,8 @@ document.addEventListener('pointerup',e=>{
     const w=Math.abs(x-d.startX),h=Math.abs(y-d.startY);
     // Release capture
     if(d.bd&&e.pointerId)try{d.bd.releasePointerCapture(e.pointerId)}catch(x){}
+    // Restore parent scroll
+    if(d.bd){d.bd.style.overflow='';d.bd.style.touchAction=''}
     _drawing=null;
     if(w<10&&h<10)return;
     const role=gv('draw-role');
@@ -4243,16 +4257,6 @@ function exportPage(){expCopyHTML()}
     ws.addEventListener('touchend',()=>{_pinch=null});
   }
 
-  // -- Double-tap to open module list --
-  let _lastTap=0;
-  document.querySelector('.workspace')?.addEventListener('touchend',e=>{
-    const now=Date.now();
-    if(now-_lastTap<300&&!e.target.closest('.win')&&!e.target.closest('.dk-block')){
-      // Double tap on empty workspace — could show quick menu
-    }
-    _lastTap=now;
-  });
-
   // -- Long press on block for context menu --
   let _longPress=null;
   document.addEventListener('touchstart',e=>{
@@ -4268,35 +4272,6 @@ function exportPage(){expCopyHTML()}
   });
   document.addEventListener('touchmove',()=>{clearTimeout(_longPress)});
   document.addEventListener('touchend',()=>{clearTimeout(_longPress)});
-
-  // -- Floating action bar for touch (bottom of screen) --
-  const fab=document.createElement('div');
-  fab.id='touch-fab';
-  fab.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:150;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);bottom:calc(16px + env(safe-area-inset-bottom))';
-  const fabActions=[
-    {icon:'✋',label:'Select',fn:()=>typeof setMode==='function'&&setMode('select')},
-    {icon:'✏️',label:'Draw',fn:()=>typeof setMode==='function'&&setMode('draw')},
-    {icon:'⬆',label:'Import',fn:()=>typeof triggerImageUpload==='function'&&triggerImageUpload()},
-    {icon:'⊕',label:'Block',fn:()=>{
-      const page=document.querySelector('.dk-page');
-      if(page&&typeof createBlock==='function'){
-        const el=createBlock(40,40,300,120,'section');
-        if(el&&typeof selectBlock==='function')selectBlock(el);
-      }
-    }},
-    {icon:'↩',label:'Undo',fn:()=>typeof undo==='function'&&undo()},
-    {icon:'↪',label:'Redo',fn:()=>typeof redo==='function'&&redo()},
-    {icon:'👁',label:'Preview',fn:()=>typeof openPreview==='function'&&openPreview()},
-  ];
-  fabActions.forEach(a=>{
-    const b=document.createElement('button');
-    b.style.cssText='background:transparent;border:1px solid var(--border);color:var(--text);font-size:14px;width:40px;height:40px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent';
-    b.innerHTML=`<span style="font-size:16px;line-height:1">${a.icon}</span><span style="font-size:6px;font-weight:700;color:var(--dim);font-family:var(--mono)">${a.label}</span>`;
-    b.addEventListener('touchstart',()=>{b.style.background='var(--s2)';b.style.transform='scale(.92)'});
-    b.addEventListener('touchend',()=>{b.style.background='transparent';b.style.transform='';a.fn()});
-    fab.appendChild(b);
-  });
-  document.body.appendChild(fab);
 
   // -- Prevent iOS overscroll/bounce --
   document.body.style.overscrollBehavior='none';
@@ -5621,49 +5596,4 @@ Auto-sync keeps both in sync automatically."></textarea>
 <div id="cheat-content" style="margin-top:16px"></div>
 </template>
 
-<script>
-// Touch FAB — floating quick menu for iPad/mobile
-if(_isTouch){
-  const fab=document.createElement('div');
-  fab.id='touch-fab';
-  fab.innerHTML=`
-    <style>
-      #touch-fab{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
-      #touch-fab>*{pointer-events:auto}
-      .fab-btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--acc);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .2s;-webkit-tap-highlight-color:transparent}
-      .fab-btn:active{transform:scale(.9);background:var(--s2)}
-      .fab-menu{display:none;flex-direction:column;gap:4px;align-items:flex-end;padding-bottom:6px}
-      .fab-menu.open{display:flex}
-      .fab-item{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-family:var(--mono);font-size:11px;color:var(--text);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap;transition:all .15s;-webkit-tap-highlight-color:transparent}
-      .fab-item:active{background:var(--s2);transform:scale(.95)}
-      .fab-item .fdot{width:8px;height:8px;border-radius:50%}
-    </style>
-    <div class="fab-menu" id="fab-menu">
-      <div class="fab-item" onclick="openModule('text');fabClose()"><span class="fdot" style="background:#8b8bf0"></span>Text</div>
-      <div class="fab-item" onclick="openModule('color');fabClose()"><span class="fdot" style="background:#d080a0"></span>Color</div>
-      <div class="fab-item" onclick="openModule('effects');fabClose()"><span class="fdot" style="background:#60b8c8"></span>Effects</div>
-      <div class="fab-item" onclick="openModule('shape');fabClose()"><span class="fdot" style="background:#60c890"></span>Shape</div>
-      <div class="fab-item" onclick="openModule('layout');fabClose()"><span class="fdot" style="background:#d0a860"></span>Layout</div>
-      <div class="fab-item" onclick="openModule('animate');fabClose()"><span class="fdot" style="background:#d07070"></span>Animate</div>
-      <div class="fab-item" onclick="openModule('export');fabClose()"><span class="fdot" style="background:#9080d0"></span>Export</div>
-      <div class="fab-item" onclick="openModule('code');fabClose()"><span class="fdot" style="background:#707880"></span>Code</div>
-      <div class="fab-item" onclick="openPreview();fabClose()" style="border-color:var(--green);color:var(--green)"><span class="fdot" style="background:var(--green)"></span>Preview</div>
-    </div>
-    <div class="fab-btn" onclick="fabToggle()" id="fab-trigger">+</div>
-  `;
-  document.body.appendChild(fab);
-  window.fabToggle=()=>{
-    const m=document.getElementById('fab-menu');
-    const t=document.getElementById('fab-trigger');
-    m.classList.toggle('open');
-    t.textContent=m.classList.contains('open')?'✕':'+';
-    t.style.transform=m.classList.contains('open')?'rotate(45deg)':'';
-  };
-  window.fabClose=()=>{
-    document.getElementById('fab-menu').classList.remove('open');
-    document.getElementById('fab-trigger').textContent='+';
-    document.getElementById('fab-trigger').style.transform='';
-  };
-}
-</script>
 </body></html>
