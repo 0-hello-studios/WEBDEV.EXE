@@ -4422,12 +4422,12 @@ window._wsScrollY=()=>sY;
 // Apple Pencil: prevent iPadOS Scribble/PencilKit on workspace elements
 // Pencil should behave as a precise pointer in this app
 document.addEventListener('touchstart',e=>{
-  // touchForceChange / Apple Pencil produces touch events too
-  // Prevent default on workspace/page to stop Scribble
   if(e.touches.length===1){
     const el=e.target;
-    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable)return;
-    if(el.closest('.dk-page,.workspace,.ws-inner,.dk-block'))e.preventDefault();
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.isContentEditable)return;
+    // Only prevent on the canvas/page itself, not on module windows
+    if(el.closest('.wbody,.wh,.wctrls,.ws-scroll-h,.ws-scroll-v'))return;
+    if(el.closest('.dk-page,.dk-block'))e.preventDefault();
   }
 },{passive:false});
 (function(){
