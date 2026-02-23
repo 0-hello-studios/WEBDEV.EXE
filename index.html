@@ -3732,9 +3732,8 @@ function openPreview(){
   const hd=document.createElement('div');hd.className='wh';
   hd.innerHTML=`<div class="wc" style="background:var(--green)"></div><span class="wt">Page Builder</span><span class="wtag" style="color:var(--green)">1280px canvas</span><div class="wctrls"><button class="wb max" title="Maximize">☐</button><button class="wb min" title="Collapse">—</button><button class="wb close" title="Close">✕</button></div>`;
   const bd=document.createElement('div');bd.className='wbody';
-  bd.style.cssText='padding:0;overflow:hidden;position:relative;background:#09090f;flex:1';
-  const v=getLPVars();
-  bd.innerHTML=`<div id="lp-sizer" style="position:relative;width:100%;overflow:hidden"><div id="lp-viewport" class="lp-viewport" style="width:1280px;transform-origin:top left;will-change:transform"><div class="dk-page mode-select" style="all:initial;display:block;position:relative;font-family:${v.bodyfont};background:${v.bg};color:${v.text};font-size:15px;line-height:1.6;min-height:900px;cursor:default;--p:${v.primary};--s:${v.secondary};--a:${v.accent};--bg:${v.bg};--sf:${v.surface};--t:${v.text};--hf:${v.headfont};--bf:${v.bodyfont};--r:${v.radius}"></div></div></div>`;
+  bd.style.cssText=`padding:0;overflow:hidden;position:relative;background:${v.bg};flex:1`;
+  bd.innerHTML=`<div id="lp-sizer" style="position:relative;width:100%;overflow:hidden;background:${v.bg}"><div id="lp-viewport" class="lp-viewport" style="width:1280px;transform-origin:top left;will-change:transform;background:${v.bg}"><div class="dk-page mode-select" style="all:initial;display:block;position:relative;font-family:${v.bodyfont};background:${v.bg};color:${v.text};font-size:15px;line-height:1.6;min-height:900px;cursor:default;--p:${v.primary};--s:${v.secondary};--a:${v.accent};--bg:${v.bg};--sf:${v.surface};--t:${v.text};--hf:${v.headfont};--bf:${v.bodyfont};--r:${v.radius}"></div></div></div>`;
   // Custom scrollbar for preview body
   const pvScrollV=document.createElement('div');
   const _pvBarW=window.matchMedia('(pointer:coarse)').matches?18:12;
@@ -3812,6 +3811,13 @@ function openPreview(){
     }
     const tag=el.querySelector('.wtag');
     if(tag)tag.textContent=Math.round(scale*100)+'% · '+pageW+'×'+(setH||Math.round(pageH));
+    // Propagate page background to all containers (prevents black gaps)
+    const pageBg=page.style.background||page.style.backgroundColor||getLPVars().bg;
+    if(pageBg){
+      vp.style.background=pageBg;
+      if(sizer)sizer.style.background=pageBg;
+      bd.style.background=pageBg;
+    }
     pvScrollUpdate();
   };
   // Make globally accessible so drag/resize can trigger it
