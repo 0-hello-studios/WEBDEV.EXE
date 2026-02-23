@@ -59,7 +59,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);height:100vh
 .win.collapsed .wbody{display:none}
 .win.collapsed{min-height:auto!important;height:auto!important}
 .win.collapsed .wh{border-radius:6px;border-bottom:none}
-.wresize{position:absolute;bottom:0;right:0;width:14px;height:14px;cursor:nwse-resize}
+.wresize{position:absolute;bottom:0;right:0;width:14px;height:14px;cursor:nwse-resize;z-index:10}
 .wresize::after{content:'';position:absolute;bottom:3px;right:3px;width:6px;height:6px;border-right:2px solid var(--bl);border-bottom:2px solid var(--bl)}
 
 /* ═══ TOOL FORM ELEMENTS ═══ */
@@ -213,6 +213,9 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
   .wb{width:28px;height:28px;font-size:12px;border-radius:6px}
   .wbody{padding:10px 12px}
   .win .resize{width:24px;height:24px;right:-4px;bottom:-4px}
+  /* Window resize grip — bigger on touch */
+  .wresize{width:28px;height:28px}
+  .wresize::after{bottom:4px;right:4px;width:10px;height:10px;border-width:3px}
 
   /* Form elements */
   input[type="range"]{height:8px;min-height:28px}
@@ -229,9 +232,14 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
   /* Tab buttons in modules */
   .mod-tab{font-size:10px;padding:6px 14px;min-height:32px}
 
-  /* Block selection handles bigger */
-  .dk-block .handle{width:16px!important;height:16px!important;border-radius:4px!important}
-  .dk-block .rot{width:20px!important;height:20px!important;top:-28px!important}
+  /* Block selection handles bigger for touch */
+  .dk-handle{width:16px!important;height:16px!important;border-radius:4px!important;border-width:2px!important}
+  .dk-handle.nw{top:-8px!important;left:-8px!important}
+  .dk-handle.ne{top:-8px!important;right:-8px!important}
+  .dk-handle.sw{bottom:-8px!important;left:-8px!important}
+  .dk-handle.se{bottom:-8px!important;right:-8px!important}
+  .dk-handle.rot{width:22px!important;height:22px!important;top:-36px!important;margin-left:-11px!important}
+  .dk-handle.rot::before{top:12px!important;height:18px!important}
 
   /* Canvas/workspace */
   .workspace{overscroll-behavior:contain}
@@ -3270,8 +3278,14 @@ function setBlockRotation(deg){
 // ═══ DRAWING ON CANVAS ═══
 function initDrawing(page,bd){
   
+  // Apple Pencil: treat pen input as select unless explicitly in draw mode
   page.addEventListener('pointerdown',e=>{
-    if(drawMode==='select')return;
+    // In select mode, pencil should act as a finger — select/drag blocks
+    if(drawMode==='select'){
+      // Prevent iPadOS from hijacking pencil for drawing/scribble
+      if(e.pointerType==='pen')e.preventDefault();
+      return;
+    }
     // In draw mode, allow starting on blocks too (to draw on top)
     if(drawMode==='draw'){
       // Only block if clicking a resize handle
@@ -3487,7 +3501,7 @@ function openPreview(){
   // Custom scrollbar for preview body
   const pvScrollV=document.createElement('div');
   const _pvBarW=window.matchMedia('(pointer:coarse)').matches?18:12;
-  pvScrollV.style.cssText=`position:absolute;top:0;right:0;bottom:0;width:${_pvBarW}px;background:rgba(0,0,0,.3);border-left:1px solid var(--border);z-index:5`;
+  pvScrollV.style.cssText=`position:absolute;top:0;right:0;bottom:${_pvBarW+4}px;width:${_pvBarW}px;background:rgba(0,0,0,.3);border-left:1px solid var(--border);z-index:5`;
   const pvThumbV=document.createElement('div');
   const _pvThW=window.matchMedia('(pointer:coarse)').matches?12:6;
   pvThumbV.style.cssText=`position:absolute;right:${(_pvBarW-_pvThW)/2}px;width:${_pvThW}px;background:var(--dim);border-radius:${_pvThW/2}px;opacity:.5;cursor:pointer;min-height:24px;transition:opacity .15s`;
@@ -4401,6 +4415,17 @@ window._wsScrollY=()=>sY;
 })();
 
 // ═══ TOUCH / TABLET ENHANCEMENTS ═══
+// Apple Pencil: prevent iPadOS Scribble/PencilKit on workspace elements
+// Pencil should behave as a precise pointer in this app
+document.addEventListener('touchstart',e=>{
+  // touchForceChange / Apple Pencil produces touch events too
+  // Prevent default on workspace/page to stop Scribble
+  if(e.touches.length===1){
+    const el=e.target;
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable)return;
+    if(el.closest('.dk-page,.workspace,.ws-inner,.dk-block'))e.preventDefault();
+  }
+},{passive:false});
 (function(){
   const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
   if(!isTouch)return;
