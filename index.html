@@ -218,7 +218,9 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
   .wresize::after{bottom:4px;right:4px;width:10px;height:10px;border-width:3px}
 
   /* Form elements */
-  input[type="range"]{height:8px;min-height:28px}
+  input[type="range"]{height:8px;min-height:36px;touch-action:none}
+  input[type="range"]::-webkit-slider-thumb{width:24px;height:24px;border-radius:50%;margin-top:-8px;box-shadow:0 0 0 3px var(--surface),0 2px 8px rgba(0,0,0,.4)}
+  input[type="range"]::-webkit-slider-runnable-track{height:8px;border-radius:4px}
   input[type="text"],input[type="number"],input[type="color"],select,textarea{
     font-size:14px!important;min-height:36px;padding:6px 10px!important;border-radius:6px}
   select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6' fill='%235a5a68'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px!important}
@@ -309,6 +311,7 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
 <button class="xbtn" onclick="openPreview()" style="border-color:var(--green);color:var(--green)">PREVIEW</button>
 <button class="xbtn" onclick="exportPage()">EXPORT HTML</button>
 <button class="abtn" onclick="toggleSettings()" id="btn-settings" style="font-size:10px;padding:3px 6px" title="Settings">⚙</button>
+<button class="abtn" onclick="openLearn()" style="font-size:10px;padding:3px 8px;border-color:rgba(124,138,240,.3);color:var(--acc)" title="Learn">?</button>
 </div>
 <div id="settings-overlay" onclick="toggleSettings()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:199"></div>
 <div id="settings-panel" style="position:fixed;top:0;right:-280px;bottom:0;width:280px;background:var(--surface);border-left:1px solid var(--border);z-index:200;box-shadow:-4px 0 24px rgba(0,0,0,.3);display:flex;flex-direction:column;transition:right .2s ease">
@@ -4488,6 +4491,36 @@ document.addEventListener('touchstart',e=>{
     if(btn){btn.style.opacity='';btn.style.transform=''}
   },{passive:true});
 
+  // -- Range slider touch polyfill: drag anywhere on the track --
+  // iOS doesn't let you slide range inputs well because the thumb is tiny
+  // This intercepts touch on ANY range input and manually sets value from finger position
+  function rangeFromTouch(range,touch){
+    const rect=range.getBoundingClientRect();
+    const x=touch.clientX-rect.left;
+    const ratio=Math.max(0,Math.min(1,x/rect.width));
+    const min=parseFloat(range.min)||0;
+    const max=parseFloat(range.max)||100;
+    const step=parseFloat(range.step)||1;
+    let val=min+ratio*(max-min);
+    val=Math.round(val/step)*step;
+    range.value=val;
+    range.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  document.addEventListener('touchstart',e=>{
+    const range=e.target.closest('input[type="range"]');
+    if(!range)return;
+    e.preventDefault();
+    rangeFromTouch(range,e.touches[0]);
+    const onM=ev=>{ev.preventDefault();rangeFromTouch(range,ev.touches[0])};
+    const onU=()=>{
+      window.removeEventListener('touchmove',onM);
+      window.removeEventListener('touchend',onU);
+      range.dispatchEvent(new Event('change',{bubbles:true}));
+    };
+    window.addEventListener('touchmove',onM,{passive:false});
+    window.addEventListener('touchend',onU);
+  },{passive:false});
+
 })();
 
 // ═══ INIT ═══
@@ -4495,6 +4528,71 @@ document.addEventListener('touchstart',e=>{
 document.getElementById('workspace').addEventListener('click',e=>{
   if(e.target.id==='workspace'||e.target.id==='wsI')clearSelection();
 });
+// ═══ LEARN MENU ═══
+function openLearn(){
+  let ov=document.getElementById('learn-overlay');
+  if(ov){ov.remove();return}
+  ov=document.createElement('div');ov.id='learn-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:600px;width:92%;max-height:85vh;overflow-y:auto;padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.6);-webkit-overflow-scrolling:touch;color:var(--text);font-family:var(--mono)';
+  box.innerHTML=`
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 style="font-size:16px;font-weight:800;margin:0;letter-spacing:-.5px">WEBDEV.EXE <span style="color:var(--acc);font-weight:400">Guide</span></h2>
+<button onclick="document.getElementById('learn-overlay').remove()" style="background:none;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer">✕</button>
+</div>
+
+<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);border-radius:8px;padding:12px 14px;margin-bottom:20px">
+<div style="font-size:11px;font-weight:800;color:#eab308;margin-bottom:4px">⚠ APPLE PENCIL USERS</div>
+<div style="font-size:11px;color:var(--dim);line-height:1.5">Disable Scribble for best results. Go to <b style="color:var(--text)">Settings → Apple Pencil → Scribble</b> and toggle it off. This prevents iPadOS from intercepting your drawing gestures.</div>
+</div>
+
+<div style="font-size:8px;font-weight:800;color:var(--dim);letter-spacing:1px;margin-bottom:8px">CANVAS MODES</div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="color:#a855f7;font-size:11px">Select</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Tap blocks to select. Drag to move. Use corner handles to resize, top handle to rotate.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="color:#a855f7;font-size:11px">Draw</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Drag on the canvas to draw a new block. Change the ROLE dropdown to set what type (frame, text, heading, button, etc).</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="color:#a855f7;font-size:11px">Text</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Tap anywhere on the canvas to place a text block and start typing immediately.</span></div>
+</div>
+
+<div style="font-size:8px;font-weight:800;color:var(--dim);letter-spacing:1px;margin-bottom:8px">MODULES</div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#8b8bf0;margin-right:6px"></span><b style="font-size:11px">Text</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Font family, size, weight, alignment, letter spacing, line height, text transform, and text shadow.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d080a0;margin-right:6px"></span><b style="font-size:11px">Color</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Background color, gradient fills (linear/radial/conic), opacity, border radius. With no block selected, changes the page background.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#60b8c8;margin-right:6px"></span><b style="font-size:11px">Effects</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Box shadow, blur, drop shadow, border styles, and backdrop blur. Layer multiple effects.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#60c890;margin-right:6px"></span><b style="font-size:11px">Shape</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Insert SVG shapes (circles, stars, arrows, etc), clip paths, and shape fills with color or gradient.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d0a860;margin-right:6px"></span><b style="font-size:11px">Layout</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Set page width/height, flexbox properties, padding, margin, and overflow on selected blocks.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d07070;margin-right:6px"></span><b style="font-size:11px">Animate</b><span style="font-size:11px;color:var(--dim);margin-left:8px">CSS animations — fade in, slide, bounce, spin, pulse, glow, and more. Set duration, delay, and easing.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#9080d0;margin-right:6px"></span><b style="font-size:11px">Export</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Export clean HTML/CSS. Copy to clipboard or download as a file. Includes responsive meta tags.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#707880;margin-right:6px"></span><b style="font-size:11px">Code</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Inject custom CSS or HTML. Add Google Fonts, external scripts, or custom code blocks.</span></div>
+</div>
+
+<div style="font-size:8px;font-weight:800;color:var(--dim);letter-spacing:1px;margin-bottom:8px">TOOLBAR</div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="font-size:11px">IMG</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Upload an image into the selected block or create a new image block.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="font-size:11px">SNAP / Grid</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Toggle 10px grid snapping for precise block placement and sizing.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="font-size:11px">↶ ↷</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Undo / Redo (also Ctrl+Z / Ctrl+Y on keyboard).</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="font-size:11px">↓ ↑</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Send block backward / bring forward in the layer stack.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="font-size:11px">+ ✕</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Duplicate or delete the selected block.</span></div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px"><b style="font-size:11px;color:#a855f7">ESC</b><span style="font-size:11px;color:var(--dim);margin-left:8px">Deselect the current block. Appears when a block is selected.</span></div>
+</div>
+
+<div style="font-size:8px;font-weight:800;color:var(--dim);letter-spacing:1px;margin-bottom:8px">TIPS</div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--dim);line-height:1.5">Double-click a text block to edit its content. Press ESC or tap outside to finish editing.</div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--dim);line-height:1.5">Use the ⚙ settings menu to change the editor theme, save/load projects, or import existing HTML pages.</div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--dim);line-height:1.5">Scroll the workspace using the slider bars on the right and bottom edges. Pinch to zoom on touch devices.</div>
+<div style="background:var(--s2);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--dim);line-height:1.5">With no block selected, the Color module changes the page background. Select a block first to color it.</div>
+</div>
+
+<div style="text-align:center;padding-top:8px">
+<button onclick="document.getElementById('learn-overlay').remove()" style="background:var(--acc);border:none;color:#fff;padding:10px 32px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">GOT IT</button>
+</div>
+`;
+  ov.appendChild(box);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove()});
+  document.body.appendChild(ov);
+}
+
 // ═══ SETTINGS & THEMES ═══
 const EDITOR_THEMES={
   midnight:{name:'Midnight',bg:'#0a0a0e',surface:'#131318',s2:'#1a1a20',s3:'#222228',border:'#2a2a32',bl:'#3a3a44',text:'#b8b8c4',dim:'#5a5a68',acc:'#7c8af0'},
