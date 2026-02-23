@@ -3732,6 +3732,7 @@ function openPreview(){
   const hd=document.createElement('div');hd.className='wh';
   hd.innerHTML=`<div class="wc" style="background:var(--green)"></div><span class="wt">Page Builder</span><span class="wtag" style="color:var(--green)">1280px canvas</span><div class="wctrls"><button class="wb max" title="Maximize">☐</button><button class="wb min" title="Collapse">—</button><button class="wb close" title="Close">✕</button></div>`;
   const bd=document.createElement('div');bd.className='wbody';
+  const v=getLPVars();
   bd.style.cssText=`padding:0;overflow:hidden;position:relative;background:${v.bg};flex:1`;
   bd.innerHTML=`<div id="lp-sizer" style="position:relative;width:100%;overflow:hidden;background:${v.bg}"><div id="lp-viewport" class="lp-viewport" style="width:1280px;transform-origin:top left;will-change:transform;background:${v.bg}"><div class="dk-page mode-select" style="all:initial;display:block;position:relative;font-family:${v.bodyfont};background:${v.bg};color:${v.text};font-size:15px;line-height:1.6;min-height:900px;cursor:default;--p:${v.primary};--s:${v.secondary};--a:${v.accent};--bg:${v.bg};--sf:${v.surface};--t:${v.text};--hf:${v.headfont};--bf:${v.bodyfont};--r:${v.radius}"></div></div></div>`;
   // Custom scrollbar for preview body
