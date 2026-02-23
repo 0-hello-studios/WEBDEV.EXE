@@ -2682,6 +2682,13 @@ function cmApply(){
       }else{
         page.style.background=bg;
       }
+      // Propagate to parent containers so no dark gaps
+      const vp=page.closest('.lp-viewport')||document.getElementById('lp-viewport');
+      if(vp)vp.style.background=page.style.background;
+      const sizer=document.getElementById('lp-sizer');
+      if(sizer)sizer.style.background=page.style.background;
+      const pbd=page.closest('.wbody');
+      if(pbd)pbd.style.background=page.style.background;
       document.getElementById('lp-bgc').value=bg;
       saveState();
     }
@@ -2897,6 +2904,12 @@ function updateLP(){
   page.style.fontFamily=v.bodyfont;
   page.style.backgroundColor=v.bg;
   page.style.color=v.text;
+  // Also propagate bg to viewport and sizer so no dark gaps show
+  vp.style.backgroundColor=v.bg;
+  const sizer=vp.closest('#lp-sizer')||document.getElementById('lp-sizer');
+  if(sizer)sizer.style.backgroundColor=v.bg;
+  const bd=vp.closest('.wbody');
+  if(bd)bd.style.backgroundColor=v.bg;
   Object.entries({'--p':v.primary,'--s':v.secondary,'--a':v.accent,'--bg':v.bg,'--sf':v.surface,'--t':v.text,'--hf':v.headfont,'--bf':v.bodyfont,'--r':v.radius}).forEach(([k,val])=>page.style.setProperty(k,val));
 }
 
@@ -3890,7 +3903,15 @@ function _projApply(proj){
   const page=document.querySelector('.dk-page');
   if(page){
     page.querySelectorAll('.dk-block').forEach(b=>b.remove());
-    if(proj.pageBg)page.style.background=proj.pageBg;
+    if(proj.pageBg){
+      page.style.background=proj.pageBg;
+      const vp=page.closest('.lp-viewport')||document.getElementById('lp-viewport');
+      if(vp)vp.style.background=proj.pageBg;
+      const sizer=document.getElementById('lp-sizer');
+      if(sizer)sizer.style.background=proj.pageBg;
+      const pbd=page.closest('.wbody');
+      if(pbd)pbd.style.background=proj.pageBg;
+    }
   }
   clearSelection();
   if(proj.animCSS){
@@ -3979,7 +4000,15 @@ function _htmlParse(src){
     const page=document.querySelector('.dk-page');
     if(page)page.querySelectorAll('.dk-block').forEach(b=>b.remove());
     clearSelection();
-    if(bodyBg&&bodyBg!=='rgba(0, 0, 0, 0)')page.style.background=bodyBg;
+    if(bodyBg&&bodyBg!=='rgba(0, 0, 0, 0)'){
+      page.style.background=bodyBg;
+      const vp=page.closest('.lp-viewport')||document.getElementById('lp-viewport');
+      if(vp)vp.style.background=bodyBg;
+      const sizer=document.getElementById('lp-sizer');
+      if(sizer)sizer.style.background=bodyBg;
+      const pbd=page.closest('.wbody');
+      if(pbd)pbd.style.background=bodyBg;
+    }
     const blocks=[];
     const processed=new WeakSet();
     function walk(el,depth){
