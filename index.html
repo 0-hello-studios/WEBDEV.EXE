@@ -2778,6 +2778,15 @@ function tmGetTarget(){
   // Target the .dk-text span if present, otherwise the block itself
   return selectedEl.querySelector('.dk-text')||selectedEl;
 }
+function stepRange(id,dir){
+  const el=document.getElementById(id);if(!el)return;
+  const step=parseFloat(el.step)||1;
+  const min=parseFloat(el.min)||0;
+  const max=parseFloat(el.max)||100;
+  let v=parseFloat(el.value)+step*dir;
+  el.value=Math.max(min,Math.min(max,v));
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
 function tmApply(){
   const t=tmGetTarget();
   const fontRaw=gv('tm-font');
@@ -5061,7 +5070,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </select>
 </div>
 <div class="row">
-<div class="field"><label>Size <span id="tm-size-v" style="color:var(--acc)">16px</span></label><input type="range" id="tm-size" min="8" max="120" value="16" oninput="tmApply()"></div>
+<div class="field"><label>Size <span id="tm-size-v" style="color:var(--acc)">16px</span></label><div style="display:flex;align-items:center;gap:4px"><button class="abtn" onclick="stepRange('tm-size',-1)" style="padding:2px 8px;font-size:12px;font-weight:800;min-height:28px">−</button><input type="range" id="tm-size" min="8" max="120" value="16" oninput="tmApply()" style="flex:1"><button class="abtn" onclick="stepRange('tm-size',1)" style="padding:2px 8px;font-size:12px;font-weight:800;min-height:28px">+</button></div></div>
 <div class="field"><label>Weight</label>
 <select id="tm-weight" onchange="tmApply()" style="width:100%">
 <option value="300">Light</option>
@@ -5075,8 +5084,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 </div>
 <div class="row">
-<div class="field"><label>Line Height <span id="tm-lh-v" style="color:var(--acc)">1.5</span></label><input type="range" id="tm-lh" min="8" max="30" value="15" oninput="tmApply()"></div>
-<div class="field"><label>Letter Space <span id="tm-ls-v" style="color:var(--acc)">0px</span></label><input type="range" id="tm-ls" min="-5" max="20" value="0" oninput="tmApply()"></div>
+<div class="field"><label>Line Height <span id="tm-lh-v" style="color:var(--acc)">1.5</span></label><div style="display:flex;align-items:center;gap:4px"><button class="abtn" onclick="stepRange('tm-lh',-1)" style="padding:2px 8px;font-size:12px;font-weight:800;min-height:28px">−</button><input type="range" id="tm-lh" min="8" max="30" value="15" oninput="tmApply()" style="flex:1"><button class="abtn" onclick="stepRange('tm-lh',1)" style="padding:2px 8px;font-size:12px;font-weight:800;min-height:28px">+</button></div></div>
+<div class="field"><label>Letter Space <span id="tm-ls-v" style="color:var(--acc)">0px</span></label><div style="display:flex;align-items:center;gap:4px"><button class="abtn" onclick="stepRange('tm-ls',-1)" style="padding:2px 8px;font-size:12px;font-weight:800;min-height:28px">−</button><input type="range" id="tm-ls" min="-5" max="20" value="0" oninput="tmApply()" style="flex:1"><button class="abtn" onclick="stepRange('tm-ls',1)" style="padding:2px 8px;font-size:12px;font-weight:800;min-height:28px">+</button></div></div>
 </div>
 <div class="field"><label>Color</label>
 <div style="display:flex;gap:6px;align-items:center">
