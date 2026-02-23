@@ -2904,6 +2904,8 @@ let _blockDrag=null;
 let _blockResize=null;
 let _blockRotate=null;
 let _drawing=null;
+let _marquee=null;
+let _multiSel=[];
 const SNAP=10;
 
 function snap(v){return snapGrid?Math.round(v/SNAP)*SNAP:v}
@@ -2991,6 +2993,14 @@ function clearSelection(){
     const txt=selectedEl.querySelector('.dk-text');
     if(txt)txt.blur();
   }
+  // Clear multi-selection
+  if(_multiSel.length){
+    _multiSel.forEach(b=>b.classList.remove('selected'));
+    _multiSel=[];
+  }
+  // Remove all .selected from page
+  document.querySelectorAll('.dk-block.selected').forEach(b=>b.classList.remove('selected'));
+  hideMultiDragBtn();
   selectedEl=null;
   window.getSelection().removeAllRanges();
   document.getElementById('sel-info').textContent='No selection';
@@ -3297,10 +3307,22 @@ function initDrawing(page,bd){
   
   // Apple Pencil: treat pen input as select unless explicitly in draw mode
   page.addEventListener('pointerdown',e=>{
-    // In select mode, pencil should act as a finger — select/drag blocks
+    // In select mode — start marquee if on empty space
     if(drawMode==='select'){
-      // Prevent iPadOS from hijacking pencil for drawing/scribble
       if(e.pointerType==='pen')e.preventDefault();
+      // Only start marquee on empty page, not on blocks
+      if(e.target.closest('.dk-block'))return;
+      const rect=page.getBoundingClientRect();
+      const scale=parseFloat(page.parentElement.style.transform?.match(/scale\(([^)]+)\)/)?.[1])||1;
+      const x=(e.clientX-rect.left)/scale;
+      const y=(e.clientY-rect.top)/scale;
+      const box=document.createElement('div');
+      box.style.cssText='position:absolute;border:1.5px dashed var(--acc);background:rgba(124,138,240,.08);pointer-events:none;z-index:999';
+      box.style.left=x+'px';box.style.top=y+'px';box.style.width='0';box.style.height='0';
+      page.appendChild(box);
+      _marquee={startX:x,startY:y,box,scale,moved:false};
+      if(bd)bd.setPointerCapture(e.pointerId);
+      e.preventDefault();
       return;
     }
     // In draw mode, allow starting on blocks too (to draw on top)
@@ -3355,6 +3377,84 @@ function initDrawing(page,bd){
     if(el&&!el.closest('.dk-block'))clearSelection();
   },{passive:true});
 }
+
+// ═══ MULTI-SELECT DRAG ═══
+let _multiDragBtn=null;
+let _multiDrag=null;
+
+function showMultiDragBtn(){
+  hideMultiDragBtn();
+  if(!_multiSel.length)return;
+  // Calculate bounding box of all selected blocks
+  const page=document.querySelector('.dk-page');
+  if(!page)return;
+  const scale=parseFloat(page.parentElement?.style.transform?.match(/scale\(([^)]+)\)/)?.[1])||1;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  _multiSel.forEach(b=>{
+    minX=Math.min(minX,b.offsetLeft);
+    minY=Math.min(minY,b.offsetTop);
+    maxX=Math.max(maxX,b.offsetLeft+b.offsetWidth);
+    maxY=Math.max(maxY,b.offsetTop+b.offsetHeight);
+  });
+  const btn=document.createElement('div');
+  btn.id='multi-drag-btn';
+  btn.style.cssText=`position:absolute;left:${(minX+maxX)/2-28}px;top:${minY-44}px;width:56px;height:32px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:grab;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.4);touch-action:none;user-select:none;-webkit-user-select:none`;
+  btn.innerHTML='<span style="color:#fff;font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.5px;pointer-events:none">DRAG</span>';
+  // Drag handler
+  const startDrag=(cx,cy)=>{
+    btn.style.cursor='grabbing';
+    const offsets=_multiSel.map(b=>({el:b,ox:b.offsetLeft,oy:b.offsetTop}));
+    _multiDrag={startX:cx/scale,startY:cy/scale,offsets,scale,page,btn,btnOX:(minX+maxX)/2-28,btnOY:minY-44};
+  };
+  btn.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    const rect=page.getBoundingClientRect();
+    startDrag(e.clientX-rect.left,e.clientY-rect.top);
+    page.closest('.wbody')?.setPointerCapture(e.pointerId);
+  });
+  page.appendChild(btn);
+  _multiDragBtn=btn;
+}
+
+function hideMultiDragBtn(){
+  if(_multiDragBtn){_multiDragBtn.remove();_multiDragBtn=null}
+  _multiDrag=null;
+}
+
+// Hook into existing pointermove/pointerup
+const _origPMMove=document.onpointermove;
+document.addEventListener('pointermove',e=>{
+  if(!_multiDrag)return;
+  const d=_multiDrag;
+  const rect=d.page.getBoundingClientRect();
+  const cx=(e.clientX-rect.left)/d.scale;
+  const cy=(e.clientY-rect.top)/d.scale;
+  const dx=cx-d.startX,dy=cy-d.startY;
+  d.offsets.forEach(o=>{
+    o.el.style.left=(o.ox+dx)+'px';
+    o.el.style.top=(o.oy+dy)+'px';
+  });
+  d.btn.style.left=(d.btnOX+dx)+'px';
+  d.btn.style.top=(d.btnOY+dy)+'px';
+});
+document.addEventListener('pointerup',e=>{
+  if(!_multiDrag)return;
+  _multiDrag.btn.style.cursor='grab';
+  // Update button position to new center
+  if(_multiSel.length){
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    _multiSel.forEach(b=>{
+      minX=Math.min(minX,b.offsetLeft);
+      minY=Math.min(minY,b.offsetTop);
+      maxX=Math.max(maxX,b.offsetLeft+b.offsetWidth);
+      maxY=Math.max(maxY,b.offsetTop+b.offsetHeight);
+    });
+    _multiDrag.btn.style.left=(minX+maxX)/2-28+'px';
+    _multiDrag.btn.style.top=(minY-44)+'px';
+  }
+  _multiDrag=null;
+  saveState();
+});
 
 // ═══ Z-ORDER ═══
 function moveZ(dir){
@@ -3452,6 +3552,18 @@ document.addEventListener('pointermove',e=>{
   onBlockDragMove(e);
   onResizeMove(e);
   onRotateMove(e);
+  // Marquee selection
+  if(_marquee){
+    const m=_marquee;
+    const rect=document.querySelector('.dk-page').getBoundingClientRect();
+    const x=(e.clientX-rect.left)/m.scale;
+    const y=(e.clientY-rect.top)/m.scale;
+    const left=Math.min(m.startX,x),top=Math.min(m.startY,y);
+    const w=Math.abs(x-m.startX),h=Math.abs(y-m.startY);
+    m.box.style.left=left+'px';m.box.style.top=top+'px';
+    m.box.style.width=w+'px';m.box.style.height=h+'px';
+    if(w>5||h>5)m.moved=true;
+  }
   // Drawing
   if(_drawing){
     const d=_drawing;
@@ -3471,6 +3583,42 @@ document.addEventListener('pointerup',e=>{
   onBlockDragEnd(e);
   onResizeEnd(e);
   onRotateEnd(e);
+  // Marquee selection end
+  if(_marquee){
+    const m=_marquee;
+    const bx=parseFloat(m.box.style.left),by=parseFloat(m.box.style.top);
+    const bw=parseFloat(m.box.style.width),bh=parseFloat(m.box.style.height);
+    m.box.remove();
+    if(m.moved&&bw>5&&bh>5){
+      // Find all blocks that intersect the marquee
+      const page=document.querySelector('.dk-page');
+      const hits=[];
+      page.querySelectorAll('.dk-block').forEach(blk=>{
+        const bl=blk.offsetLeft,bt=blk.offsetTop;
+        const br=bl+blk.offsetWidth,bb=bt+blk.offsetHeight;
+        // Check overlap
+        if(bl<bx+bw&&br>bx&&bt<by+bh&&bb>by)hits.push(blk);
+      });
+      if(hits.length===1){
+        selectBlock(hits[0]);
+      }else if(hits.length>1){
+        // Multi-select: highlight all, select first for editing
+        clearSelection();
+        _multiSel=hits.slice();
+        hits.forEach(b=>b.classList.add('selected'));
+        selectedEl=hits[0];
+        document.getElementById('sel-info').textContent=hits.length+' blocks';
+        document.getElementById('sel-dims').textContent='';
+        const db=document.getElementById('desel-btn');if(db)db.style.display='';
+        showMultiDragBtn();
+      }else{
+        clearSelection();
+      }
+    }else if(!m.moved){
+      clearSelection();
+    }
+    _marquee=null;
+  }
   // Drawing end
   if(_drawing){
     const d=_drawing;
