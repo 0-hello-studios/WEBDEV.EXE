@@ -391,6 +391,7 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
 <button class="abtn" onclick="redo()" title="Redo (Ctrl+Y)" id="btn-redo" style="opacity:.3">↷</button>
 <div class="spacer"></div>
 <span id="sel-info" style="font-size:7px;color:var(--dim);font-family:var(--mono);letter-spacing:.5px">No selection</span>
+<button class="abtn" id="desel-btn" onclick="clearSelection()" style="display:none;border-color:rgba(168,85,247,.4);color:#a855f7;font-weight:800;font-size:9px;padding:4px 10px">ESC</button>
 <select id="sel-type" onchange="reTypeBlock(this.value)" style="display:none;font-size:7px;padding:0 2px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);border-radius:3px;color:#a855f7;font-family:var(--mono);font-weight:700;cursor:pointer;max-width:60px;height:16px">
 <option>frame</option><option>heading</option><option>text</option><option>button</option><option>link</option><option>image</option><option>input</option><option>icon</option><option>nav</option><option>section</option><option>card</option><option>badge</option><option>divider</option><option>video</option>
 </select>
@@ -2951,6 +2952,7 @@ function selectBlock(el,e){
     const w=Math.round(el.offsetWidth),h=Math.round(el.offsetHeight);
     document.getElementById('sel-info').textContent='';
     document.getElementById('sel-dims').textContent=w+'×'+h;
+    const db=document.getElementById('desel-btn');if(db)db.style.display='';
     // Show type selector
     if(typeSelect){typeSelect.style.display='inline-block';typeSelect.value=label}
     // Update rotation input
@@ -2965,6 +2967,7 @@ function selectBlock(el,e){
   }else{
     document.getElementById('sel-info').textContent='No selection';
     document.getElementById('sel-dims').textContent='';
+    const db=document.getElementById('desel-btn');if(db)db.style.display='none';
     if(typeSelect)typeSelect.style.display='none';
   }
 }
@@ -2981,6 +2984,7 @@ function clearSelection(){
   document.getElementById('sel-dims').textContent='';
   const typeSelect=document.getElementById('sel-type');
   if(typeSelect)typeSelect.style.display='none';
+  const db=document.getElementById('desel-btn');if(db)db.style.display='none';
 }
 
 // ═══ RETYPE BLOCK ═══
@@ -4487,6 +4491,10 @@ document.addEventListener('touchstart',e=>{
 })();
 
 // ═══ INIT ═══
+// Tap workspace background (outside any window) to deselect
+document.getElementById('workspace').addEventListener('click',e=>{
+  if(e.target.id==='workspace'||e.target.id==='wsI')clearSelection();
+});
 // ═══ SETTINGS & THEMES ═══
 const EDITOR_THEMES={
   midnight:{name:'Midnight',bg:'#0a0a0e',surface:'#131318',s2:'#1a1a20',s3:'#222228',border:'#2a2a32',bl:'#3a3a44',text:'#b8b8c4',dim:'#5a5a68',acc:'#7c8af0'},
