@@ -3320,8 +3320,7 @@ function initDrawing(page,bd){
       box.style.cssText='position:absolute;border:1.5px dashed var(--acc);background:rgba(124,138,240,.08);pointer-events:none;z-index:999';
       box.style.left=x+'px';box.style.top=y+'px';box.style.width='0';box.style.height='0';
       page.appendChild(box);
-      _marquee={startX:x,startY:y,box,scale,moved:false};
-      if(bd)bd.setPointerCapture(e.pointerId);
+      _marquee={startX:x,startY:y,box,scale,moved:false,page};
       e.preventDefault();
       return;
     }
@@ -3366,15 +3365,88 @@ function initDrawing(page,bd){
   
   // Click on empty page = deselect
   page.addEventListener('click',e=>{
-    if(drawMode==='select'&&!e.target.closest('.dk-block'))clearSelection();
+    if(drawMode==='select'&&!e.target.closest('.dk-block')&&!_marquee)clearSelection();
   });
-  // Touch: tap on page = deselect (any tap not on a block)
-  page.addEventListener('touchend',e=>{
+
+  // Touch: marquee drag + tap to deselect
+  let _touchMarquee=null;
+  page.addEventListener('touchstart',e=>{
     if(drawMode!=='select')return;
-    if(e.changedTouches.length!==1)return;
-    const t=e.changedTouches[0];
+    if(e.touches.length!==1)return;
+    const t=e.touches[0];
     const el=document.elementFromPoint(t.clientX,t.clientY);
-    if(el&&!el.closest('.dk-block'))clearSelection();
+    if(el&&el.closest('.dk-block'))return; // on a block, let block handler deal
+    if(el&&el.closest('#multi-drag-btn'))return;
+    e.preventDefault();
+    const rect=page.getBoundingClientRect();
+    const scale=parseFloat(page.parentElement?.style.transform?.match(/scale\(([^)]+)\)/)?.[1])||1;
+    const x=(t.clientX-rect.left)/scale;
+    const y=(t.clientY-rect.top)/scale;
+    _touchMarquee={startX:x,startY:y,scale,moved:false,sx:t.clientX,sy:t.clientY};
+    // Create box immediately
+    const box=document.createElement('div');
+    box.style.cssText='position:absolute;border:1.5px dashed var(--acc);background:rgba(124,138,240,.08);pointer-events:none;z-index:999';
+    box.style.left=x+'px';box.style.top=y+'px';box.style.width='0';box.style.height='0';
+    page.appendChild(box);
+    _touchMarquee.box=box;
+  },{passive:false});
+
+  page.addEventListener('touchmove',e=>{
+    if(!_touchMarquee)return;
+    e.preventDefault();
+    const t=e.touches[0];
+    const m=_touchMarquee;
+    const rect=page.getBoundingClientRect();
+    const x=(t.clientX-rect.left)/m.scale;
+    const y=(t.clientY-rect.top)/m.scale;
+    const left=Math.min(m.startX,x),top=Math.min(m.startY,y);
+    const w=Math.abs(x-m.startX),h=Math.abs(y-m.startY);
+    m.box.style.left=left+'px';m.box.style.top=top+'px';
+    m.box.style.width=w+'px';m.box.style.height=h+'px';
+    if(w>8||h>8)m.moved=true;
+  },{passive:false});
+
+  page.addEventListener('touchend',e=>{
+    if(!_touchMarquee){
+      // Simple tap deselect fallback
+      if(drawMode==='select'&&e.changedTouches.length===1){
+        const t=e.changedTouches[0];
+        const el=document.elementFromPoint(t.clientX,t.clientY);
+        if(el&&!el.closest('.dk-block'))clearSelection();
+      }
+      return;
+    }
+    const m=_touchMarquee;
+    const bx=parseFloat(m.box.style.left),by=parseFloat(m.box.style.top);
+    const bw=parseFloat(m.box.style.width),bh=parseFloat(m.box.style.height);
+    m.box.remove();
+    _touchMarquee=null;
+
+    if(m.moved&&bw>8&&bh>8){
+      // Find blocks in marquee
+      const hits=[];
+      page.querySelectorAll('.dk-block').forEach(blk=>{
+        const bl=blk.offsetLeft,bt=blk.offsetTop;
+        const br=bl+blk.offsetWidth,bb=bt+blk.offsetHeight;
+        if(bl<bx+bw&&br>bx&&bt<by+bh&&bb>by)hits.push(blk);
+      });
+      if(hits.length===1){
+        selectBlock(hits[0]);
+      }else if(hits.length>1){
+        clearSelection();
+        _multiSel=hits.slice();
+        hits.forEach(b=>b.classList.add('selected'));
+        selectedEl=hits[0];
+        document.getElementById('sel-info').textContent=hits.length+' blocks';
+        document.getElementById('sel-dims').textContent='';
+        const db=document.getElementById('desel-btn');if(db)db.style.display='';
+        showMultiDragBtn();
+      }else{
+        clearSelection();
+      }
+    }else{
+      clearSelection();
+    }
   },{passive:true});
 }
 
