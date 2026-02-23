@@ -180,13 +180,96 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
 .dk-page.mode-text{cursor:text!important}
 .dk-page.mode-select{cursor:default!important}
 
-/* Mobile */
-@media(max-width:768px){
-  .abtn{font-size:7px;padding:2px 5px}
-  .win{min-width:160px}
-  .wh{height:24px}
-  .wbody{padding:5px 6px}
+/* ═══ TOUCH / TABLET / MOBILE ═══ */
+@media(pointer:coarse){
+  /* Bigger touch targets everywhere */
+  .abtn{font-size:9px;padding:6px 12px;min-height:36px;border-radius:6px;gap:6px}
+  .abtn .dot{width:6px;height:6px}
+  .xbtn{font-size:9px;padding:6px 12px;min-height:36px;border-radius:6px}
+  .sep{height:20px;margin:0 4px}
+
+  /* Topbar rows */
+  .tb-row1{height:44px;gap:4px;padding:0 8px;-webkit-overflow-scrolling:touch}
+  .tb-row2{height:38px;gap:4px;padding:0 8px;-webkit-overflow-scrolling:touch}
+  .topbar h1{font-size:13px}
+
+  /* Scroll hints for toolbars */
+  .tb-row1::after,.tb-row2::after{content:'';position:sticky;right:0;width:28px;min-width:28px;height:100%;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none;flex-shrink:0}
+
+  /* Windows — bigger headers, easier to grab */
+  .win{min-width:280px;border-radius:12px}
+  .wh{height:40px;padding:0 12px;gap:8px;border-radius:12px 12px 0 0}
+  .wt{font-size:12px}
+  .wtag{font-size:8px}
+  .wb{width:28px;height:28px;font-size:12px;border-radius:6px}
+  .wbody{padding:10px 12px}
+  .win .resize{width:24px;height:24px;right:-4px;bottom:-4px}
+
+  /* Form elements */
+  input[type="range"]{height:8px;min-height:28px}
+  input[type="text"],input[type="number"],input[type="color"],select,textarea{
+    font-size:14px!important;min-height:36px;padding:6px 10px!important;border-radius:6px}
+  select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6' fill='%235a5a68'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px!important}
+
+  /* Chips / toggle buttons */
+  .chip,.pbtn,.tm-align{min-height:32px;font-size:10px!important;padding:6px 12px!important;border-radius:6px}
+
+  /* Code output areas */
+  .out{font-size:11px!important;padding:10px!important;border-radius:8px;-webkit-overflow-scrolling:touch}
+
+  /* Tab buttons in modules */
+  .mod-tab{font-size:10px;padding:6px 14px;min-height:32px}
+
+  /* Block selection handles bigger */
+  .dk-block .handle{width:16px!important;height:16px!important;border-radius:4px!important}
+  .dk-block .rot{width:20px!important;height:20px!important;top:-28px!important}
+
+  /* Canvas/workspace */
+  .workspace{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+  /* Mode toolbar at bottom of page builder */
+  .mode-bar{gap:4px}
+  .mode-bar button{min-height:36px;font-size:10px;padding:4px 12px}
+
+  /* Scrollbars — always visible on touch */
+  .wbody::-webkit-scrollbar{width:6px}
+  .wbody::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+  /* Field labels */
+  .field label{font-size:10px!important}
+  .field{margin-bottom:8px}
+
+  /* Color swatches bigger */
+  .swatch,.pal-swatch{min-width:36px;min-height:36px;border-radius:6px}
+
+  /* Toast */
+  .toast{font-size:12px;padding:10px 20px;border-radius:8px}
 }
+
+/* Tablet landscape (iPad) */
+@media(min-width:768px) and (max-width:1200px) and (pointer:coarse){
+  .win{max-width:calc(100vw - 40px)}
+  .lp-viewport{width:100%!important}
+}
+
+/* Small screens (phone) */
+@media(max-width:768px){
+  .abtn{font-size:8px;padding:4px 8px;min-height:32px}
+  .xbtn{font-size:8px;padding:4px 8px;min-height:32px}
+  .win{min-width:calc(100vw - 20px);max-width:calc(100vw - 20px);left:10px!important}
+  .wh{height:36px}
+  .wbody{padding:8px 10px}
+  .topbar h1{font-size:11px}
+  .tb-row1{height:40px}
+  .tb-row2{height:34px}
+}
+
+/* Prevent iOS zoom on double-tap */
+*{touch-action:manipulation}
+.workspace{touch-action:pan-x pan-y}
+.dk-page{touch-action:none}
+.wh{touch-action:none}
+.win .resize{touch-action:none}
 </style>
 </head>
 <body>
@@ -344,10 +427,26 @@ document.addEventListener('mouseup',()=>{_dr=null;_rs=null});
 document.addEventListener('touchmove',e=>{
   if(_dr||_rs){e.preventDefault();const t=e.touches[0];
     if(_dr){const d=_dr;const wr=ws.getBoundingClientRect();const mx=t.clientX-wr.left+ws.scrollLeft,my=t.clientY-wr.top+ws.scrollTop;d.w.style.left=Math.max(0,mx-d.ox)+'px';d.w.style.top=Math.max(0,my-d.oy)+'px'}
-    if(_rs){const r=_rs;r.w.style.width=Math.max(220,r.sw+(t.clientX-r.sx))+'px';r.w.style.height=Math.max(100,r.sh+(t.clientY-r.sy))+'px'}
+    if(_rs){const r=_rs;r.w.style.width=Math.max(280,r.sw+(t.clientX-r.sx))+'px';r.w.style.height=Math.max(150,r.sh+(t.clientY-r.sy))+'px'}
   }
 },{passive:false});
 document.addEventListener('touchend',()=>{_dr=null;_rs=null});
+
+// Touch: double-tap window header to maximize/restore
+const _isTouch='ontouchstart' in window||navigator.maxTouchPoints>0;
+function toggleMaximize(win){
+  if(win._maximized){
+    win.style.left=win._restoreRect.l;win.style.top=win._restoreRect.t;
+    win.style.width=win._restoreRect.w;win.style.height=win._restoreRect.h;
+    win._maximized=false;
+  }else{
+    win._restoreRect={l:win.style.left,t:win.style.top,w:win.style.width,h:win.style.height};
+    const wr=ws.getBoundingClientRect();
+    win.style.left=ws.scrollLeft+'px';win.style.top=ws.scrollTop+'px';
+    win.style.width=wr.width+'px';win.style.height=wr.height+'px';
+    win._maximized=true;
+  }
+}
 
 // ═══ MODULE SYSTEM ═══
 const MODULES={
@@ -406,7 +505,7 @@ function openModule(modId){
   const hasDevTools=mod.devTools&&mod.devTools.length>0;
   const toolCount=mod.tools.length;
   const devLabel=hasDevTools?`<button class="wb dev-toggle" title="Developer Mode" onclick="toggleDevMode(this,'${modId}')">⟨/⟩</button>`:'';
-  hd.innerHTML=`<div class="wc" style="background:${mod.color}"></div><span class="wt">${mod.icon} ${mod.name}</span><span class="wtag">${toolCount} TOOL${toolCount>1?'S':''}</span><div class="wctrls">${devLabel}<button class="wb min" title="Collapse">—</button><button class="wb close" title="Close">✕</button></div>`;
+  hd.innerHTML=`<div class="wc" style="background:${mod.color}"></div><span class="wt">${mod.icon} ${mod.name}</span><span class="wtag">${toolCount} TOOL${toolCount>1?'S':''}</span><div class="wctrls">${devLabel}<button class="wb max" title="Maximize">☐</button><button class="wb min" title="Collapse">—</button><button class="wb close" title="Close">✕</button></div>`;
   
   const bd=document.createElement('div');bd.className='wbody';
   
@@ -452,7 +551,16 @@ function openModule(modId){
   rsz.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();_rs={w:el,sx:e.clientX,sy:e.clientY,sw:el.offsetWidth,sh:el.offsetHeight}});
   rsz.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();const t=e.touches[0];_rs={w:el,sx:t.clientX,sy:t.clientY,sw:el.offsetWidth,sh:el.offsetHeight}},{passive:false});
   hd.querySelector('.min').addEventListener('click',()=>el.classList.toggle('collapsed'));
+  hd.querySelector('.max').addEventListener('click',()=>toggleMaximize(el));
   hd.querySelector('.close').addEventListener('click',()=>{el.remove();delete openWindows[winId]});
+  // Double-tap header to maximize on touch
+  let _lastTap=0;
+  hd.addEventListener('touchend',e=>{
+    if(e.target.closest('.wb'))return;
+    const now=Date.now();
+    if(now-_lastTap<300){toggleMaximize(el);e.preventDefault()}
+    _lastTap=now;
+  });
   
   wsI.appendChild(el);
   openWindows[winId]=el;
@@ -3338,7 +3446,7 @@ function openPreview(){
   el.style.cssText=`left:${vx}px;top:${vy}px;width:${pw}px;height:${ph}px;z-index:${++topZ}`;
   el.dataset.tool='_preview';
   const hd=document.createElement('div');hd.className='wh';
-  hd.innerHTML=`<div class="wc" style="background:var(--green)"></div><span class="wt">Page Builder</span><span class="wtag" style="color:var(--green)">1280px canvas</span><div class="wctrls"><button class="wb min" title="Collapse">—</button><button class="wb close" title="Close">✕</button></div>`;
+  hd.innerHTML=`<div class="wc" style="background:var(--green)"></div><span class="wt">Page Builder</span><span class="wtag" style="color:var(--green)">1280px canvas</span><div class="wctrls"><button class="wb max" title="Maximize">☐</button><button class="wb min" title="Collapse">—</button><button class="wb close" title="Close">✕</button></div>`;
   const bd=document.createElement('div');bd.className='wbody';
   bd.style.cssText='padding:0;overflow:auto;position:relative;background:#09090f;flex:1';
   const v=getLPVars();
@@ -3389,7 +3497,15 @@ function openPreview(){
   rsz.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();const t=e.touches[0];_rs={w:el,sx:t.clientX,sy:t.clientY,sw:el.offsetWidth,sh:el.offsetHeight}},{passive:false});
   const resObs=new ResizeObserver(doResize);
   hd.querySelector('.min').addEventListener('click',()=>el.classList.toggle('collapsed'));
+  hd.querySelector('.max').addEventListener('click',()=>toggleMaximize(el));
   hd.querySelector('.close').addEventListener('click',()=>{resObs.disconnect();el.remove();delete openWindows['_preview']});
+  let _lastTapPV=0;
+  hd.addEventListener('touchend',e=>{
+    if(e.target.closest('.wb'))return;
+    const now=Date.now();
+    if(now-_lastTapPV<300){toggleMaximize(el);e.preventDefault()}
+    _lastTapPV=now;
+  });
   wsI.appendChild(el);
   openWindows['_preview']=el;
   requestAnimationFrame(()=>{
@@ -4096,7 +4212,133 @@ function expInitCSS(){
 
 // Legacy wrapper
 function exportPage(){expCopyHTML()}
+// ═══ TOUCH / TABLET ENHANCEMENTS ═══
+(function(){
+  const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
+  if(!isTouch)return;
+
+  // -- Pinch-to-zoom on workspace --
+  const ws=document.querySelector('.workspace');
+  if(ws){
+    let _pinch=null;
+    ws.addEventListener('touchstart',e=>{
+      if(e.touches.length===2){
+        _pinch={d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),
+          scale:parseFloat(ws.dataset.zoom||1)};
+        e.preventDefault();
+      }
+    },{passive:false});
+    ws.addEventListener('touchmove',e=>{
+      if(_pinch&&e.touches.length===2){
+        e.preventDefault();
+        const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+        const ratio=nd/_pinch.d;
+        let ns=Math.max(.25,Math.min(2,_pinch.scale*ratio));
+        ws.dataset.zoom=ns;
+        const inner=ws.querySelector('.ws-inner');
+        if(inner)inner.style.transform=`scale(${ns})`;
+        if(inner)inner.style.transformOrigin='0 0';
+      }
+    },{passive:false});
+    ws.addEventListener('touchend',()=>{_pinch=null});
+  }
+
+  // -- Double-tap to open module list --
+  let _lastTap=0;
+  document.querySelector('.workspace')?.addEventListener('touchend',e=>{
+    const now=Date.now();
+    if(now-_lastTap<300&&!e.target.closest('.win')&&!e.target.closest('.dk-block')){
+      // Double tap on empty workspace — could show quick menu
+    }
+    _lastTap=now;
+  });
+
+  // -- Long press on block for context menu --
+  let _longPress=null;
+  document.addEventListener('touchstart',e=>{
+    const blk=e.target.closest('.dk-block');
+    if(blk){
+      _longPress=setTimeout(()=>{
+        // Select block on long press
+        if(typeof selectBlock==='function')selectBlock(blk);
+        // Haptic feedback if available
+        if(navigator.vibrate)navigator.vibrate(10);
+      },400);
+    }
+  });
+  document.addEventListener('touchmove',()=>{clearTimeout(_longPress)});
+  document.addEventListener('touchend',()=>{clearTimeout(_longPress)});
+
+  // -- Floating action bar for touch (bottom of screen) --
+  const fab=document.createElement('div');
+  fab.id='touch-fab';
+  fab.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:150;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);bottom:calc(16px + env(safe-area-inset-bottom))';
+  const fabActions=[
+    {icon:'✋',label:'Select',fn:()=>typeof setMode==='function'&&setMode('select')},
+    {icon:'✏️',label:'Draw',fn:()=>typeof setMode==='function'&&setMode('draw')},
+    {icon:'⬆',label:'Import',fn:()=>typeof triggerImageUpload==='function'&&triggerImageUpload()},
+    {icon:'⊕',label:'Block',fn:()=>{
+      const page=document.querySelector('.dk-page');
+      if(page&&typeof createBlock==='function'){
+        const el=createBlock(40,40,300,120,'section');
+        if(el&&typeof selectBlock==='function')selectBlock(el);
+      }
+    }},
+    {icon:'↩',label:'Undo',fn:()=>typeof undo==='function'&&undo()},
+    {icon:'↪',label:'Redo',fn:()=>typeof redo==='function'&&redo()},
+    {icon:'👁',label:'Preview',fn:()=>typeof openPreview==='function'&&openPreview()},
+  ];
+  fabActions.forEach(a=>{
+    const b=document.createElement('button');
+    b.style.cssText='background:transparent;border:1px solid var(--border);color:var(--text);font-size:14px;width:40px;height:40px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent';
+    b.innerHTML=`<span style="font-size:16px;line-height:1">${a.icon}</span><span style="font-size:6px;font-weight:700;color:var(--dim);font-family:var(--mono)">${a.label}</span>`;
+    b.addEventListener('touchstart',()=>{b.style.background='var(--s2)';b.style.transform='scale(.92)'});
+    b.addEventListener('touchend',()=>{b.style.background='transparent';b.style.transform='';a.fn()});
+    fab.appendChild(b);
+  });
+  document.body.appendChild(fab);
+
+  // -- Prevent iOS overscroll/bounce --
+  document.body.style.overscrollBehavior='none';
+  document.body.style.webkitOverflowScrolling='touch';
+
+  // -- Active states for touch buttons (CSS :active isn't reliable on touch) --
+  document.addEventListener('touchstart',e=>{
+    const btn=e.target.closest('.abtn,.xbtn,.btn,.chip,.pbtn,.wb,.mod-tab');
+    if(btn){btn.style.opacity='.7';btn.style.transform='scale(.96)'}
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    const btn=e.target.closest('.abtn,.xbtn,.btn,.chip,.pbtn,.wb,.mod-tab');
+    if(btn){btn.style.opacity='';btn.style.transform=''}
+  },{passive:true});
+
+})();
+
 // ═══ INIT ═══
+// Touch: pinch-to-zoom workspace
+if(_isTouch){
+  let _pinchDist=0,_wsZoom=1;
+  ws.addEventListener('touchstart',e=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      _pinchDist=Math.sqrt(dx*dx+dy*dy);
+    }
+  },{passive:true});
+  ws.addEventListener('touchmove',e=>{
+    if(e.touches.length===2&&_pinchDist>0){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const scale=dist/_pinchDist;
+      _wsZoom=Math.max(0.3,Math.min(2,_wsZoom*scale));
+      wsI.style.transform=`scale(${_wsZoom})`;
+      wsI.style.transformOrigin='top left';
+      _pinchDist=dist;
+    }
+  },{passive:true});
+  ws.addEventListener('touchend',()=>{_pinchDist=0},{passive:true});
+}
 // ═══ SETTINGS & THEMES ═══
 const EDITOR_THEMES={
   midnight:{name:'Midnight',bg:'#0a0a0e',surface:'#131318',s2:'#1a1a20',s3:'#222228',border:'#2a2a32',bl:'#3a3a44',text:'#b8b8c4',dim:'#5a5a68',acc:'#7c8af0'},
@@ -5379,4 +5621,49 @@ Auto-sync keeps both in sync automatically."></textarea>
 <div id="cheat-content" style="margin-top:16px"></div>
 </template>
 
+<script>
+// Touch FAB — floating quick menu for iPad/mobile
+if(_isTouch){
+  const fab=document.createElement('div');
+  fab.id='touch-fab';
+  fab.innerHTML=`
+    <style>
+      #touch-fab{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
+      #touch-fab>*{pointer-events:auto}
+      .fab-btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--acc);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .2s;-webkit-tap-highlight-color:transparent}
+      .fab-btn:active{transform:scale(.9);background:var(--s2)}
+      .fab-menu{display:none;flex-direction:column;gap:4px;align-items:flex-end;padding-bottom:6px}
+      .fab-menu.open{display:flex}
+      .fab-item{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-family:var(--mono);font-size:11px;color:var(--text);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap;transition:all .15s;-webkit-tap-highlight-color:transparent}
+      .fab-item:active{background:var(--s2);transform:scale(.95)}
+      .fab-item .fdot{width:8px;height:8px;border-radius:50%}
+    </style>
+    <div class="fab-menu" id="fab-menu">
+      <div class="fab-item" onclick="openModule('text');fabClose()"><span class="fdot" style="background:#8b8bf0"></span>Text</div>
+      <div class="fab-item" onclick="openModule('color');fabClose()"><span class="fdot" style="background:#d080a0"></span>Color</div>
+      <div class="fab-item" onclick="openModule('effects');fabClose()"><span class="fdot" style="background:#60b8c8"></span>Effects</div>
+      <div class="fab-item" onclick="openModule('shape');fabClose()"><span class="fdot" style="background:#60c890"></span>Shape</div>
+      <div class="fab-item" onclick="openModule('layout');fabClose()"><span class="fdot" style="background:#d0a860"></span>Layout</div>
+      <div class="fab-item" onclick="openModule('animate');fabClose()"><span class="fdot" style="background:#d07070"></span>Animate</div>
+      <div class="fab-item" onclick="openModule('export');fabClose()"><span class="fdot" style="background:#9080d0"></span>Export</div>
+      <div class="fab-item" onclick="openModule('code');fabClose()"><span class="fdot" style="background:#707880"></span>Code</div>
+      <div class="fab-item" onclick="openPreview();fabClose()" style="border-color:var(--green);color:var(--green)"><span class="fdot" style="background:var(--green)"></span>Preview</div>
+    </div>
+    <div class="fab-btn" onclick="fabToggle()" id="fab-trigger">+</div>
+  `;
+  document.body.appendChild(fab);
+  window.fabToggle=()=>{
+    const m=document.getElementById('fab-menu');
+    const t=document.getElementById('fab-trigger');
+    m.classList.toggle('open');
+    t.textContent=m.classList.contains('open')?'✕':'+';
+    t.style.transform=m.classList.contains('open')?'rotate(45deg)':'';
+  };
+  window.fabClose=()=>{
+    document.getElementById('fab-menu').classList.remove('open');
+    document.getElementById('fab-trigger').textContent='+';
+    document.getElementById('fab-trigger').style.transform='';
+  };
+}
+</script>
 </body></html>
